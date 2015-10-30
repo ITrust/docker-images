@@ -1,0 +1,18 @@
+---
+  - name: provision curator image
+    hosts: local
+    tasks:
+      - name: Ensure pip is installed.
+        apt: name={{ item }} state=installed
+        with_items:
+          - python-pip
+      - name: Install Elasticsearch Curator and required dependencies.
+        pip: name={{ item }}
+        with_items:
+          - elasticsearch-curator
+      - name: Download go-cron archive
+        get_url: url="https://github.com/odise/go-cron/releases/download/v0.0.7/go-cron-linux.gz" dest="/usr/local/bin"
+      - name: unarchive go-cron
+        command: "gunzip /usr/local/bin/go-cron-linux.gz"
+      - name: set mode to go-cron-linux
+        file: path="/usr/local/bin/go-cron-linux" mode="u+x"
