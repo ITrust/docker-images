@@ -1,6 +1,5 @@
-from ansible/ubuntu14.04-ansible
+from ubuntu:trusty
 
-ADD ansible /srv/ansible
-WORKDIR /srv/ansible
-RUN ansible-playbook cython-ubuntu.yml -c local
+RUN apt-get update && apt-get install -y vim python-dev python3-dev python-pip python3-pip gcc clang 
+RUN pip install cython && pip3 install cython
 VOLUME /src
