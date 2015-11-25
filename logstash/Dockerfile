@@ -1,4 +1,5 @@
-from logstash:latest
+from logstash:2.1
 MAINTAINER Maxime Cottret <mcottret@itrust.fr>
 VOLUME ["/config-dir"]
-RUN apt-get update && apt-get install -y libzmq3-dev
+RUN apt-get update && apt-get install -y libzmq3-dev \
+    rm -rf /var/lib/apt/lists; rm /tmp/*
