@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-set -x
+
 if [ "${1:0:1}" = '-' ]; then
 	set -- mongod "$@"
 fi
@@ -14,7 +14,7 @@ if [ "$1" = 'mongod' ]; then
 	fi
 
     if [ "$MONGO_STARTUP_SCRIPT" != "" ]; then
-		gosu mongodb "$@" --fork --logpath /tmp/mongo.log --pidfilepath /tmp/mongo.pid
+		gosu mongodb "$@" --fork --logpath /tmp/mongo.log
         gosu mongodb mongo $MONGO_STARTUP_SCRIPT
 		gosu mongodb "$@" --shutdown
 		gosu mongodb rm /tmp/mongo.log
