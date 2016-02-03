@@ -4,12 +4,6 @@ MAINTAINER Maxime Cottret <mcottret@itrust.fr>
 
 ENV SPARK_VERSION 1.6.0
 ENV HADOOP_VERSION hadoop2.6
-ENV SCALA_VERSION 2.10
-ENV ELASTIC_VERSION 2.2.0-rc1
-ENV MONGO_VERSION 1.4.0
-ENV MONGO_DRIVER_VERSION 3.2.1
-ENV PY2NEO_VERSION 2.0.8
-ENV PYELASTIC_VERSION 2.2.0
 
 # miniconda installation
 RUN apt-get update --fix-missing && apt-get install -y wget curl bzip2 ca-certificates \
@@ -50,11 +44,15 @@ RUN curl -sL --retry 3 \
   | tar x -C /usr/ \
   && ln -s $SPARK_HOME /usr/spark
 
+# JUPYTER
 ADD *.sh /usr/spark/
 RUN chmod +x /usr/spark/*.sh
+RUN mkdir -p /root/.ivy2/jars
+RUN conda install jupyter && conda clean -yt
 
-RUN pip install py2neo==${PY2NEO_VERSION} elasticsearch==${PYELASTIC_VERSION} && \
-    wget -qO- -O $SPARK_HOME/lib/elasticsearch-hadoop-${ELASTIC_VERSION}.jar http://central.maven.org/maven2/org/elasticsearch/elasticsearch-hadoop/${ELASTIC_VERSION}/elasticsearch-hadoop-${ELASTIC_VERSION}.jar && \
-    wget -qO- -O $SPARK_HOME/lib/spark-streaming-kafka-assembly_${SCALA_VERSION}-${SPARK_VERSION}.jar http://central.maven.org/maven2/org/apache/spark/spark-streaming-kafka-assembly_${SCALA_VERSION}/${SPARK_VERSION}/spark-streaming-kafka-assembly_${SCALA_VERSION}-${SPARK_VERSION}.jar && \
-    wget -qO- -O $SPARK_HOME/lib/mongo-hadoop-core-${MONGO_VERSION}.jar https://github.com/mongodb/mongo-hadoop/releases/download/r${MONGO_VERSION}/mongo-hadoop-core-${MONGO_VERSION}.jar && \
-    wget -qO- -O $SPARK_HOME/lib/mongo-java-driver-${MONGO_DRIVER_VERSION}.jar https://oss.sonatype.org/content/repositories/releases/org/mongodb/mongo-java-driver/${MONGO_DRIVER_VERSION}/mongo-java-driver-${MONGO_DRIVER_VERSION}.jar
+# configure IPYTHON_OPTS
+RUN mkdir -p /root/.jupyter
+ADD jupyter_notebook_config.py /root/.jupyter/
+RUN mkdir /notebooks
+VOLUME ['/notebooks']
+WORKDIR /notebooks
