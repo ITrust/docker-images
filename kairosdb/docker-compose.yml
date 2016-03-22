@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+    cassandra:
+        image: cassandra
+        ports:
+            - 9160
+
+    kairos:
+        image: itrust/kairosdb
+        links:
+            - cassandra
+        ports:
+            - 8080:8080
+        environment:
+            - CASS_HOSTS=cassandra:9160
