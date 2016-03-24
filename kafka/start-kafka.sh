@@ -4,20 +4,17 @@
 set -eo pipefail
 
 if [ -z "$KAFKA_BROKER_ID" ]; then
-  echo "\$KAFKA_BROKER_ID not set"
-  exit 1
+  export KAFKA_BROKER_ID=0
 fi
 echo "KAFKA_BROKER_ID=$KAFKA_BROKER_ID"
 
 if [ -z "$KAFKA_ADVERTISED_HOST_NAME" ]; then
-  echo "\$KAFKA_ADVERTISED_HOST_NAME not set"
-  exit 1
+  export KAFKA_ADVERTISED_HOST_NAME=$(grep $HOSTNAME /etc/hosts | awk '{print $1}')
 fi
 echo "KAFKA_ADVERTISED_HOST_NAME=$KAFKA_ADVERTISED_HOST_NAME"
 
 if [ -z "$KAFKA_ZOOKEEPER_CONNECT" ]; then
-  echo "\$KAFKA_ZOOKEEPER_CONNECT not set"
-  exit 1
+  export KAFKA_ZOOKEEPER_CONNECT=zookeeper
 fi
 echo "KAFKA_ZOOKEEPER_CONNECT=$KAFKA_ZOOKEEPER_CONNECT"
 

@@ -15,7 +15,3 @@ services:
             - zookeeper
         ports:
             - 9092:9092
-        environment:
-            - KAFKA_BROKER_ID=1
-            - KAFKA_ADVERTISED_HOST_NAME=kafka
-            - KAFKA_ZOOKEEPER_CONNECT=zookeeper
