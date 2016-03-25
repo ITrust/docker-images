@@ -1,29 +1,18 @@
-FROM debian:jessie
+FROM java:8-jre-alpine
 
 MAINTAINER Maxime COTTRET <mcottret@itrust.fr>
 
 ENV ZOOKEEPER_VERSION 3.4.8
 
-RUN apt-get update && apt-get install -y --force-yes curl software-properties-common python-software-properties gettext && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apk add --update --no-cache bash gawk sed grep bc coreutils gettext curl && rm -rf /var/cache/apk/*
+RUN sed -i -e "s/bin\/ash/bin\/bash/" /etc/passwd
 
-# JAVA
-ENV JAVA_HOME /usr/jdk1.8.0_31
-ENV PATH $PATH:$JAVA_HOME/bin
-RUN curl -sL --retry 3 --insecure \
-  --header "Cookie: oraclelicense=accept-securebackup-cookie;" \
-  "http://download.oracle.com/otn-pub/java/jdk/8u31-b13/server-jre-8u31-linux-x64.tar.gz" \
-  | gunzip \
-  | tar x -C /usr/ \
-  && ln -s $JAVA_HOME /usr/java \
-  && rm -rf $JAVA_HOME/man
-
-RUN curl -sS http://apache.mirrors.ovh.net/ftp.apache.org/dist/zookeeper/zookeeper-${ZOOKEEPER_VERSION}/zookeeper-${ZOOKEEPER_VERSION}.tar.gz | tar -xzf - -C /opt \
+RUN  mkdir /opt \
+  && curl -sS http://apache.mirrors.ovh.net/ftp.apache.org/dist/zookeeper/zookeeper-${ZOOKEEPER_VERSION}/zookeeper-${ZOOKEEPER_VERSION}.tar.gz | tar -xzf - -C /opt \
   && mv /opt/zookeeper-* /opt/zookeeper \
   && chown -R root:root /opt/zookeeper
 
-RUN groupadd -r zookeeper \
-  && useradd -c "Zookeeper" -d /var/lib/zookeeper -g zookeeper -M -r -s /sbin/nologin zookeeper \
+RUN addgroup zookeeper && adduser -D  -G zookeeper -s /bin/false zookeeper \
   && mkdir /var/lib/zookeeper \
   && chown -R zookeeper:zookeeper /var/lib/zookeeper
 
