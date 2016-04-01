@@ -1,6 +1,6 @@
 ## About:
 
-[Docker](http://www.docker.com/) image based on [digitalwonderland/docker-kafka](https://registry.hub.docker.com/u/digitalwonderland/docker-kafka/)
+[Docker](http://www.docker.com/) image based on [digitalwonderland/docker-kafka](https://registry.hub.docker.com/u/digitalwonderland/docker-kafka/)  and [Confluent](http://www.confluent.io/)
 
 ## Additional Software:
 
