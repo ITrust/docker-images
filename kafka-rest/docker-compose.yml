@@ -1,0 +1,33 @@
+version: '2'
+
+services:
+    zookeeper:
+        image: itrust/zookeeper
+        ports:
+            - 2181:2181
+            - 2888:2888
+            - 3888:3888
+
+    kafka:
+        image: itrust/kafka
+        container_name: kafka
+        links:
+            - zookeeper
+        ports:
+            - 9092:9092
+
+    kafka-schema:
+        image: itrust/kafka-schema
+        links:
+            - zookeeper
+            - kafka
+        ports:
+            - 9081:9081
+
+    kafka-rest:
+        image: itrust/kafka-rest
+        links:
+            - kafka-schema
+            - zookeeper
+        ports:
+            - 9082:9082
