@@ -10,4 +10,4 @@ for c in `printenv | perl -sne 'print "$1 " if m/^SPARK_CONF_(.+?)=.*/'`; do
     echo $name $value >> $SPARK_HOME/conf/spark-defaults.conf
 done
 
-exec $@
+exec "$@"
