@@ -17,7 +17,7 @@ function main {
   env | sort
   echo "------------------------------------------------------------------------"
   echo "- kairosdb.properties --------------------------------------------------"
-  /usr/sbin/envsubst < /tmp/kairosdb.properties > /opt/kairosdb/conf/kairosdb.properties
+  /usr/bin/envsubst < /tmp/kairosdb.properties > /opt/kairosdb/conf/kairosdb.properties
   cat /opt/kairosdb/conf/kairosdb.properties
   echo "------------------------------------------------------------------------"
   /opt/kairosdb/bin/kairosdb.sh run
