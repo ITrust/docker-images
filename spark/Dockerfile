@@ -43,6 +43,6 @@ RUN conda install jupyter && conda clean -yt
 RUN mkdir -p /root/.jupyter
 ADD jupyter_notebook_config.py /root/.jupyter/
 
-VOLUME ['/notebooks']
+VOLUME ["/notebooks"]
 
 ENTRYPOINT ["/usr/spark/spark-entrypoint.sh"]
