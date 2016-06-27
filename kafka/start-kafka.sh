@@ -61,4 +61,4 @@ done
 
 export KAFKA_LOG4J_OPTS="-Dlog4j.configuration=file:${CONFLUENT_HOME}/etc/kafka/log4j.properties"
 
-exec ${CONFLUENT_HOME}/bin/kafka-server-start ${kafka_cfg_file}
+exec "$@"
