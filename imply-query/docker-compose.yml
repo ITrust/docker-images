@@ -1,0 +1,33 @@
+version: '2'
+
+services:
+  zookeeper: 
+    image: itrust/zookeeper:2.0.1
+    ports:
+      - 2181:2181
+
+  master:
+    image: itrust/imply-master:1.3.0
+    ports:
+      - 8081:8081
+      - 8090:8090
+    links:
+      - zookeeper
+
+  data:
+    image: itrust/imply-data:1.3.0
+    ports:
+      - 8083:8083
+      - 8091:8091
+    links:
+      - zookeeper
+
+  query:
+    image: itrust/imply-query:1.3.0
+    ports:
+      - 8082:8082
+      - 9095:9095
+    links:
+      - zookeeper
+      - master
+      - data
