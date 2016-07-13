@@ -2,6 +2,9 @@
 
 druid_cfg_file="$IMPLY_HOME/conf/druid/_common/common.runtime.properties"
 
+#######################
+# Druid configuration #
+#######################
 export MASTER_HOST=${MASTER_HOST:=$(grep $HOSTNAME /etc/hosts | awk '{print $1}')}
 export MASTER_PORT=${MASTER_PORT:=1527}
 
@@ -87,5 +90,46 @@ echo "Druid common runtime configuration:"
 echo "-----------------------------------"
 cat ${druid_cfg_file}
 echo ""
+
+########################
+# hadoop configuration #
+########################
+hadoop_cfg_path="$IMPLY_HOME/conf/druid/_common"
+
+export CORE_CONF_fs_defaultFS=${CORE_CONF_fs_defaultFS:-hdfs://hdfsname:8020}
+
+function addProperty() {
+  local path=$1
+  local name=$2
+  local value=$3
+
+  local entry="<property><name>$name</name><value>${value}</value></property>"
+  local escapedEntry=$(echo $entry | sed 's/\//\\\//g')
+  sed -i "/<\/configuration>/ s/.*/${escapedEntry}\n&/" $path
+}
+
+function configure() {
+    local path=$1
+    local module=$2
+    local envPrefix=$3
+
+    local var
+    local value
+
+    echo "Configuring $module"
+    for c in `printenv | perl -sne 'print "$1 " if m/^${envPrefix}_(.+?)=.*/' -- -envPrefix=$envPrefix`; do
+        name=`echo ${c} | perl -pe 's/___/-/g; s/__/_/g; s/_/./g'`
+        var="${envPrefix}_${c}"
+        value=${!var}
+        echo " - Setting $name=$value"
+        addProperty $path/$module-site.xml $name "$value"
+    done
+}
+
+configure $hadoop_cfg_path core CORE_CONF
+configure $hadoop_cfg_path hdfs HDFS_CONF
+configure $hadoop_cfg_path yarn YARN_CONF
+configure $hadoop_cfg_path httpfs HTTPFS_CONF
+configure $hadoop_cfg_path kms KMS_CONF
 
 exec "$@"
