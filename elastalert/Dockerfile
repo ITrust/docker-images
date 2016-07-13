@@ -71,7 +71,7 @@ RUN python setup.py install && \
     sed -i -e"s|es_port: [0-9]*|es_port: ${ELASTICSEARCH_PORT}|g" ${ELASTALERT_CONFIG} && \
 
 # Custom time format issue #616
-    sed -i -e'142s/return ts/return ts[:-3]/' ${ELASTALERT_HOME}/${ELASTALERT_DIR}/util.py && \ 
+    sed -i -e'142s/return ts/return ts[:-3]/' ${ELASTALERT_HOME}/${ELASTALERT_DIRECTORY_NAME}/util.py && \ 
 
 # Elastalert Supervisor configuration:
     # Redirect Supervisor log output to a file in the designated logs directory.
