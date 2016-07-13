@@ -117,6 +117,7 @@ function configure() {
     local value
 
     echo "Configuring $module"
+    touch $path/$module-site.xml
     for c in `printenv | perl -sne 'print "$1 " if m/^${envPrefix}_(.+?)=.*/' -- -envPrefix=$envPrefix`; do
         name=`echo ${c} | perl -pe 's/___/-/g; s/__/_/g; s/_/./g'`
         var="${envPrefix}_${c}"
