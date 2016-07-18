@@ -1,4 +1,4 @@
-FROM itrust/confluent:2.0.1
+FROM itrust/confluent:3.0
 
 ENV ZK_DATA_DIR "/var/lib/zookeeper"
 ENV KAFKA_LOG4J_OPTS -Dlog4j.configuration=file:${CONFLUENT_HOME}/etc/kafka/log4j.properties

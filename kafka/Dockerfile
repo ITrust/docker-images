@@ -1,4 +1,4 @@
-FROM itrust/confluent:2.0.1
+FROM itrust/confluent:3.0
 
 ENV KAFKA_LOGS "/var/log/kafka"
 ENV KAFKA_LOG_DIRS "/var/lib/kafka"

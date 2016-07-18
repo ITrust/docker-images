@@ -1,4 +1,4 @@
-FROM itrust/confluent:2.0.1
+FROM itrust/confluent:3.0
 
 
 ADD start-kafka-rest.sh /usr/local/sbin/start-kafka-rest.sh
