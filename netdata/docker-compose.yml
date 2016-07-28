@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  netdata:
+    image: itrust/netdata:latest
+    command: netdata -nd -ch /host
+    ports:
+      - 19999:19999
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
