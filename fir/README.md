@@ -1,6 +1,5 @@
 # FIR Docker image build
 
-
 ## FIR container configuration
 
 This FIR Docker images is designed to be integrated with a proxy and a database.
@@ -45,9 +44,9 @@ server {
 }
 ```
 
-## docker-compose simple example
+## docker-compose example
 
-A very simple *docker-compose.yml* file (Note the `volumes_from` directive on nginx referencing the fir container)
+A *docker-compose.yml* file provided as example (Note the `volumes_from` directive on nginx referencing the fir container and the reference to the nginx-config file described below)
 
 ```
 version: '2'
@@ -74,7 +73,7 @@ services:
     expose:
       - "8000"
     environment:
-      - FIR_SECRET_KEY=DoNotLooseIt
+      - FIR_SECRET_KEY=example
       - FIR_INCIDENT_SHOW_ID=True
       - FIR_ALLOWED_HOSTS=your.gorgeous.domain,fir
       - FIR_MYSQLDB_NAME=fir

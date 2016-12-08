@@ -107,7 +107,6 @@ LOGGING = {
     },
 }
 EOF
-#cat "$(pwd)/fir/config/production.py"
 
 cat > $(pwd)/fir/config/installed_apps.txt <<EOF
 fir_alerting
