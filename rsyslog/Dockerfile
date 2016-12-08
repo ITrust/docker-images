@@ -1,5 +1,5 @@
 FROM alpine:latest
-MAINTAINER Julien Lavesque <jlavesque@itrust.fr>
+MAINTAINER CHristopher HALMA <chalma@itrust.fr>
 
 RUN apk update --repository http://dl-3.alpinelinux.org/alpine/edge/main && \
 	apk add  --repository http://dl-3.alpinelinux.org/alpine/edge/main rsyslog rsyslog-hiredis rsyslog-tls\
