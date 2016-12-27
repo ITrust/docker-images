@@ -13,15 +13,26 @@ Supported environment variables for configuration:
 - `FIR_ALLOWED_HOSTS`: List parsed as a *Python List* filling the Django variable `ALLOWED_HOSTS`.
 - `FIR_SECRET_KEY`: String directly given to the django configuration file passed to the Django variable `SECRET_KEY`.
 - `FIR_INCIDENT_SHOW_ID`: Setting the variable to whatever non-empty value will set the FIR variable `INCIDENT_SHOW_ID` to `True`.
+
+For MySQL Database:
+
 - `FIR_MYSQLDB_NAME`: (Required) The MySQL Database name that will be used by FIR.
 - `FIR_MYSQLDB_USER`: (Required) The MySQL Database user That will be used by FIR.
 - `FIR_MYSQLDB_PASSWORD`: (Required) The MySQL Database password for the user declared earlier.
 - `FIR_MYSQLDB_HOST`: (Required) The MySQL Database host/ip that will be used by FIR.
 - `FIR_MYSQLDB_PORT`: (Optionnal) Default value to 3306.
 
+For Postgres Database:
+
+- `FIR_PGDB_NAME`: (Required) The Postgres Database name that will be used by FIR.
+- `FIR_PGDB_USER`: (Required) The Postgres Database user That will be used by FIR.
+- `FIR_PGDB_PASSWORD`: (Required) The Postgres Database password for the user declared earlier.
+- `FIR_PGDB_HOST`: (Required) The Postgres Database host/ip that will be used by FIR.
+- `FIR_PGDB_PORT`: (Optionnal) Default value to 5432.
+
 ## Proxy configuration
 
-The container exposes a volume for static directory : `/usr/src/FIR/static/`
+The container exposes a volume for static directory : `/usr/src/FIR/static/`. This volume needs to be mounted on a web server serving the `/static` path.
 
 Proxy configuration exemple for nginx (file: `/etc/nginx/conf.d/default.conf`):
 
@@ -67,7 +78,7 @@ services:
       - ./config-nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   fir:
-    build: itrust/fir
+    image: itrust/fir
     links:
       - fir_db:database
     expose:
@@ -95,8 +106,10 @@ services:
 
 ## Seeding database with default values
 
-To seed the database with the data provided by FIR development team in `FIR/incidents/fixtures`, run the following command :
+To seed the database with the data provided by FIR development team, run the following command :
 
 ```
 docker-compose exec fir ./set_default_data.sh
 ```
+
+The `/usr/src/FIR/incidents/fixtures` directory can be mounted in the docker container to change the default fixtures.

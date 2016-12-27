@@ -17,14 +17,28 @@ function ToPythonBool {
   [[ -z ${1+x} ]] && printf 'False' || printf 'True'
 }
 
-function MakeDB {
+function MakeDjangoDB {
   local DBdict
   # MySQL
   if [[ ! -z ${FIR_MYSQLDB_NAME+x} && ! -z ${FIR_MYSQLDB_USER+x} && ! -z ${FIR_MYSQLDB_PASSWORD+x} && ! -z ${FIR_MYSQLDB_HOST+x} ]]; then
     DBdict="{ 'ENGINE': 'django.db.backends.mysql', 'NAME': '${FIR_MYSQLDB_NAME}', 'USER': '${FIR_MYSQLDB_USER}', 'PASSWORD': '${FIR_MYSQLDB_PASSWORD}', 'HOST': '${FIR_MYSQLDB_HOST}', 'PORT': '${FIR_MYSQLDB_PORT:-3306}' }"
+
+    # STALLING FOR MySQL DATABASE
+    while true; do
+      nc -z "${FIR_MYSQLDB_HOST}" "${FIR_MYSQLDB_PORT:-3306}" 2>/dev/null && \
+      break;
+    done
+
   # Postgres SQL
   elif [[ ! -z ${FIR_PGDB_NAME+x} && ! -z ${FIR_PGDB_USER+x} && ! -z ${FIR_PGDB_PASSWORD+x} && ! -z ${FIR_PGDB_HOST+x} ]]; then
     DBdict="{ 'ENGINE': 'django.db.backends.postgresql', 'NAME': '${FIR_PGDB_NAME}', 'USER': '${FIR_PGDB_USER}', 'PASSWORD': '${FIR_PGDB_PASSWORD}', 'HOST': '${FIR_PGDB_HOST}', 'PORT': '${FIR_PGDB_PORT:-5432}' }"
+
+    # STALLING FOR Postgres DATABASE
+    while true; do
+      nc -z "${FIR_PGDB_HOST}" "${FIR_PGDB_PORT:-5432}" 2>/dev/null && \
+      break;
+    done
+
   fi
   printf "{ 'default': ${DBdict}}"
 }
@@ -40,7 +54,7 @@ function MakeSMTP {
     fi
 
     if [[ ! -z ${FIR_REPLY_TO+x} ]]; then
-      printf "REPLY_TO = '%s'\n"
+      printf "REPLY_TO = '%s'\n" "${FIR_REPLY_TO}"
     fi
 
     if [[ ! -z ${FIR_EMAIL_USE_TLS+x} ]]; then
@@ -64,7 +78,7 @@ SECRET_KEY = '${FIR_SECRET_KEY}'
 
 INCIDENT_SHOW_ID = $(ToPythonBool ${FIR_INCIDENT_SHOW_ID})
 
-DATABASES = $(MakeDB)
+DATABASES = $(MakeDjangoDB)
 
 # SMTP SETTINGS
 $(MakeSMTP)
@@ -114,14 +128,6 @@ fir_todos
 fir_nuggets
 fir_api
 EOF
-
-printf 'Stalling for %s Database\n' "${DB}"
-
-while true; do
-  nc -z "${FIR_MYSQLDB_HOST}" "${FIR_MYSQLDB_PORT:-3306}" 2>/dev/null && \
-  printf 'Database MySQL found on %s:%s and appears to be ready\n' "${FIR_MYSQLDB_HOST}" "${FIR_MYSQLDB_PORT:-3306}" && \
-  break;
-done
 
 python ./manage.py migrate --settings fir.config.production && \
 python ./manage.py collectstatic --settings fir.config.production <<<yes && \
