@@ -58,9 +58,9 @@ function MakeSMTP {
     fi
 
     if [[ ! -z ${FIR_EMAIL_USE_TLS+x} ]]; then
-      printf "EMAIL_USE_TLS = '%s'\n" "$(ToPythonBool ${FIR_EMAIL_USE_TLS})"
+      printf "EMAIL_USE_TLS = %s\n" "$(ToPythonBool ${FIR_EMAIL_USE_TLS})"
     elif [[ ! -z ${FIR_EMAIL_USE_SSL+x} ]]; then
-      printf "EMAIL_USE_SSL = '%s'\n" "$(ToPythonBool ${FIR_EMAIL_USE_SSL})"
+      printf "EMAIL_USE_SSL = %s\n" "$(ToPythonBool ${FIR_EMAIL_USE_SSL})"
     fi
   fi
 }
