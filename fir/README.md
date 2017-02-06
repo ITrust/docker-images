@@ -4,11 +4,11 @@
 
 This FIR Docker images is designed to be integrated with a proxy and a database.
 
-At now, only MySQL databases are supported, an nginx configuration is provided as an example.
+At now, only MySQL and Postgres databases are supported, an nginx configuration is provided as an example.
 
-The Entrypoint script produces a `production.py` file based on the environment variables that are provided to the container.
+The Entrypoint script produces a `production.py` file based on the environment variables that are provided to the FIR container.
 
-Supported environment variables for configuration:
+Supported environment variables for configuration are:
 
 - `FIR_ALLOWED_HOSTS`: List parsed as a *Python List* filling the Django variable `ALLOWED_HOSTS`.
 - `FIR_SECRET_KEY`: String directly given to the django configuration file passed to the Django variable `SECRET_KEY`.
@@ -57,13 +57,14 @@ server {
 
 ## docker-compose example
 
-A *docker-compose.yml* file provided as example (Note the `volumes_from` directive on nginx referencing the fir container and the reference to the nginx-config file described below)
+A *docker-compose.yml* file provided as example
 
 ```
 version: '2'
 
 volumes:
   db_data:
+  fir_static:
 
 services:
   nginx:
@@ -72,10 +73,9 @@ services:
       - "8000:80"
     links:
       - fir:fir
-    volumes_from:
-      - fir
     volumes:
       - ./config-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - fir_static:/usr/src/FIR/static/
 
   fir:
     image: itrust/fir
@@ -83,6 +83,8 @@ services:
       - fir_db:database
     expose:
       - "8000"
+    volumes:
+      - fir_static:/usr/src/FIR/static
     environment:
       - FIR_SECRET_KEY=example
       - FIR_INCIDENT_SHOW_ID=True
@@ -112,4 +114,4 @@ To seed the database with the data provided by FIR development team, run the fol
 docker-compose exec fir ./set_default_data.sh
 ```
 
-The `/usr/src/FIR/incidents/fixtures` directory can be mounted in the docker container to change the default fixtures.
+The `/usr/src/FIR/incidents/fixtures` directory can also be mounted to a local directory if you want to provide your own fixtures. The `set_default_data.sh` script will use Django `loaddata` feature on each json file within `/usr/src/FIR/incidents/fixtures` directory.
