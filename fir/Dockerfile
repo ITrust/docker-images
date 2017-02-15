@@ -4,7 +4,7 @@ ENV DJANGO_STATIC_DIR "/usr/src/FIR/static"
 
 RUN mkdir -p /usr/src  && \
     apt-get update && apt-get install -y netcat && \
-    pip install mysql-python && \
+    pip install mysql-python psycopg2 && \
     cd /usr/src && \
     git clone "https://github.com/certsocietegenerale/FIR.git"
 
