@@ -1,10 +1,26 @@
-FROM alpine:latest
-MAINTAINER CHristopher HALMA <chalma@itrust.fr>
+FROM debian:jessie
 
-RUN apk update --repository http://dl-3.alpinelinux.org/alpine/edge/main && \
-	apk add  --repository http://dl-3.alpinelinux.org/alpine/edge/main rsyslog rsyslog-hiredis rsyslog-tls\
-	&& rm -rf /var/cache/apk/*
+ENV DEBIAN_FRONTEND noninteractive
 
-COPY ./etc/rsyslog.conf /etc/rsyslog.conf
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+        rsyslog \
+        rsyslog-gnutls \
+        rsyslog-mysql \
+        rsyslog-pgsql \
+        rsyslog-elasticsearch \
+        rsyslog-mongodb \
+        rsyslog-relp \
+    && \
+    echo "deb http://ftp.debian.org/debian jessie-backports main" >> /etc/apt/sources.list.d/jessie-backports.list && \ 
+    apt-get update && apt-get -t jessie-backports install -yq --no-install-recommends \
+        rsyslog-kafka \
+        rsyslog-hiredis \
+    && \
+    echo 'global(processInternalMessages="off")' > /etc/rsyslog.conf && \
+    echo '$IncludeConfig /etc/rsyslog.d/*.conf' >> /etc/rsyslog.conf
 
-ENTRYPOINT [ "rsyslogd", "-n" ]
+EXPOSE 514 514/udp
+
+VOLUME [ "/etc/rsyslog.d" ]
+
+ENTRYPOINT [ "rsyslogd", "-n", "-f", "/etc/rsyslog.conf", "-i", "/tmp/rsyslog.pid" ]
