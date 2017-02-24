@@ -45,6 +45,7 @@ function MakeDjangoDB {
 
 function MakeSMTP {
   if [[ ! -z ${FIR_EMAIL_HOST+x} && ! -z ${FIR_EMAIL_PORT+x} ]]; then
+    printf "EMAIL_BACKEND = 'djembe.backends.EncryptingSMTPBackend'\n"
     printf "EMAIL_HOST = '%s'\n" "${FIR_EMAIL_HOST}"
     printf "EMAIL_PORT = '%s'\n" "${FIR_EMAIL_PORT}"
 
@@ -69,6 +70,7 @@ function MakeSMTP {
 ##
 cat > "$(pwd)/fir/config/production.py" <<EOF
 
+import sys
 from fir.config.base import *
 
 ALLOWED_HOSTS = $(ToPythonList ${FIR_ALLOWED_HOSTS})
@@ -105,17 +107,17 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
+        'console': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'errors.log'),
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['file'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': True,
         },
     },
@@ -123,10 +125,12 @@ LOGGING = {
 EOF
 
 cat > $(pwd)/fir/config/installed_apps.txt <<EOF
+djembe
 fir_alerting
 fir_todos
 fir_nuggets
 fir_api
+fir_relations
 EOF
 
 python ./manage.py migrate --settings fir.config.production && \

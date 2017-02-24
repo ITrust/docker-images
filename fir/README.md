@@ -114,4 +114,4 @@ To seed the database with the data provided by FIR development team, run the fol
 docker-compose exec fir ./set_default_data.sh
 ```
 
-The `/usr/src/FIR/incidents/fixtures` directory can also be mounted to a local directory if you want to provide your own fixtures. The `set_default_data.sh` script will use Django `loaddata` feature on each json file within `/usr/src/FIR/incidents/fixtures` directory.
+The `/usr/src/FIR/incidents/fixtures` directory can also be mounted to a local directory if you want to provide your own fixtures. The `set_default_data.sh` script will use Django `loaddata` feature on the file `incidents/fixtures/seed_data.json` then on the file `incidents/fixtures/dev_users.json`.

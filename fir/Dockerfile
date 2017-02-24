@@ -4,7 +4,11 @@ ENV DJANGO_STATIC_DIR "/usr/src/FIR/static"
 
 RUN mkdir -p /usr/src  && \
     apt-get update && apt-get install -y netcat && \
-    pip install mysql-python psycopg2 && \
+    pip install \
+        mysql-python \
+        psycopg2 \
+        django-djembe \
+    && \
     cd /usr/src && \
     git clone "https://github.com/certsocietegenerale/FIR.git"
 
@@ -16,7 +20,8 @@ COPY ./set_default_data.sh .
 RUN mkdir -p "${DJANGO_STATIC_DIR}" && \
     chmod u+x "$(pwd)/entrypoint.sh" && \
     chmod u+x "$(pwd)/set_default_data.sh" && \
-    pip install -r requirements.txt
+    pip install -r requirements.txt && \
+    pip install -r fir_email/requirements_smime.txt
 
 VOLUME ["/usr/src/FIR/static"]
 
