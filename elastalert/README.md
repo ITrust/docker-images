@@ -1,13 +1,13 @@
-## Elastalert image properties
+## Elastalert image properties and behaviour
 
-This image has been made with the following build arguments:
+This image has been built for Elasticsearch 2.* and is made with the following build arguments:
 
 - `elastalert_rules_folder="/opt/rules"`
 - `elastert_installation_path="/opt/elastalert"`
 
 ### Mounting a configuration file
 
-By default the entrypoint script launching elastalert uses `/opt/elastalert/config.yaml`, mounting this config file from a volume wil inhibit all configuration throught environement variables.
+By default the entrypoint script launching elastalert uses `/opt/elastalert/config.yaml`, mounting this config file from a volume will inhibit all configuration throught environement variables.
 
 ### Mounting rules folder:
 
@@ -35,10 +35,10 @@ all the environment variables described below are the capitalized version the YA
 
 - Elastalert config:
   - `WRITEBACK_INDEX` (Optional) default value to `elastalert_status`
-  - `RUN_EVERY` Default value to `1 minute`, expecting a [litteral time description](#litteral-time-descriptions).
-  - `BUFFER_TIME` Default value to `45 minutes`, expecting a [litteral time description](#litteral-time-descriptions).
+  - `RUN_EVERY` (Optional) Default value to `1 minute`, expecting a [litteral time description](#litteral-time-descriptions).
+  - `BUFFER_TIME` (Optional) Default value to `45 minutes`, expecting a [litteral time description](#litteral-time-descriptions).
   - `DISABLE_RULES_ON_ERROR` (Optional) Elastalert default value to `True`.
-  - `ALERT_TIME_LIMIT` default value to `2 days`, expecting a [litteral time description](#litteral-time-descriptions).
+  - `ALERT_TIME_LIMIT` (Optional) default value to `2 days`, expecting a [litteral time description](#litteral-time-descriptions).
 
 - Email configuration:
   - `NOTIFY_EMAIL` Analoguous of their uncapitalized yaml parametter.
@@ -65,7 +65,7 @@ run_every:
 
 By default, the process is Elastalert run in verbose mode (`--verbose` option), to overwrite this option the `CMD` directive can be used, available option can be found in the [official elastalert documentation](http://elastalert.readthedocs.io/en/latest/elastalert.html#running-elastalert).
 
-To run other elastalert modules (such as [`elastalert_test_rule`](http://elastalert.readthedocs.io/en/latest/ruletypes.html#testing)), the `ENTRYPOINT` can be overwritten to one of these values :
+To run other elastalert modules (such as [`elastalert_test_rule`](http://elastalert.readthedocs.io/en/latest/ruletypes.html#testing)), use the `COMMAND` attribute of the container. Set the first argument of the command to :
 
 - `elastalert-test-rule` to test one rule
 
@@ -89,8 +89,10 @@ usage: elastalert-create-index [-h] [--host HOST] [--port PORT]
                                [--config CONFIG]
 ```
 
-- ~~`elastalert-rule-from-kibana`~~ Buggy in v0.1.12
 
 ## TODOs
 
-[ ] when VERIFY_CERTS = `False` append curl with `--insecure` in `./entrypoint.sh`.
+- [x] when VERIFY_CERTS = `False` append curl with `--insecure` in `./entrypoint.sh`.
+
+- [x] generate config file from environment variables when invoking `elastalert_test_rule` instead of needing to mount an external config file
+

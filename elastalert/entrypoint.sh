@@ -1,5 +1,29 @@
 #!/bin/bash
 
+log() {
+	declare level=${1}
+	shift
+	declare msg=$(printf "${@}")
+	printf '%s:%s:%s\n' "${level}" "$(basename "${0}")" "${msg}"
+}
+
+INFO_log() {
+	log 'INFO' "${@}"
+}
+
+WARN_log() {
+	log 'WARN' "${@}"
+}
+
+ERROR_log() {
+	log 'ERROR' "${@}"
+}
+
+clean_exit() {
+	ERROR_log 'Force exit requested';
+	exit -1;
+}
+
 ## Funtion expecting 2 parametters and print them as a yaml KV only if the value is not empty
 to_yaml_kv() {
 	declare yamlKey="${1}" yamlValue="${2}";
@@ -81,141 +105,180 @@ elasticsearch_uri() {
 	fi
 }
 
-if [[ ! -f "${ELASTALERT_INSTALLATION_PATH}/config.yaml" ]]; then
-	printf 'INFO:entrypoint.sh:Loading configuration from container environement variables.\n'
-	## Config File generation
-	cat > "${ELASTALERT_INSTALLATION_PATH}/config.yaml" <<-EOF
-	##
-	## ELASTICSEARCH CONFIGURATION
-	##
+http_code_from_es_api() {
+	declare api_path=${1}
+	if [[ VERIFY_CERTS = "False" ]]; then
+		http_returned_code=$(curl -o /dev/null --silent --insecure --write-out '%{http_code}' "$(elasticsearch_uri)${api_path}")
+	else
+		http_returned_code=$(curl -o /dev/null --silent --write-out '%{http_code}' "$(elasticsearch_uri)${api_path}")
+	fi
 
-	# The elasticsearch hostname for metadata writeback
-	# Note that every rule can have its own elasticsearch host
-	es_host: ${ELASTICSEARCH_HOST}
-	# The elasticsearch port
-	es_port: ${ELASTICSEARCH_PORT}
+	printf '%s' "${http_returned_code}"
+}
 
-	# Optional URL prefix for elasticsearch
-	$(to_yaml_kv "es_url_prefix" "${ES_URL_PREFIX}")
+main() {
+	if [[ ! -f "${ELASTALERT_INSTALLATION_PATH}/config.yaml" ]]; then
+		INFO_log 'Loading configuration from container environement variables'
+		## Config File generation
+		cat > "${ELASTALERT_INSTALLATION_PATH}/config.yaml" <<-EOF
+		##
+		## ELASTICSEARCH CONFIGURATION
+		##
 
-	# Connect with SSL to elasticsearch
-	$(to_yaml_kv "use_ssl" "${USE_SSL}")
-	$(to_yaml_kv "verify_certs" "${VERIFY_CERTS}")
+		# The elasticsearch hostname for metadata writeback
+		# Note that every rule can have its own elasticsearch host
+		es_host: ${ELASTICSEARCH_HOST}
+		# The elasticsearch port
+		es_port: ${ELASTICSEARCH_PORT}
 
-	# Option basic-auth username and password for elasticsearch
-	$(to_yaml_kv "es_username" "${ES_USERNAME}")
-	$(to_yaml_kv "es_password" "${ES_PASSWORD}")
+		# Optional URL prefix for elasticsearch
+		$(to_yaml_kv "es_url_prefix" "${ES_URL_PREFIX}")
 
-	# GET request with body is the default option for Elasticsearch. 
-	# If it fails for some reason, you can pass 'GET', 'POST' or 'source'.
-	# See http://elasticsearch-py.readthedocs.io/en/master/connection.html?highlight=send_get_body_as#transport
-	# for details
-	$(to_yaml_kv "es_send_get_body_as" "${ES_SEND_GET_BODY_AS}")
+		# Connect with SSL to elasticsearch
+		$(to_yaml_kv "use_ssl" "${USE_SSL}")
+		$(to_yaml_kv "verify_certs" "${VERIFY_CERTS}")
 
-	$(to_yaml_kv "es_conn_timeout" "${ES_CONN_TIMEOUT}")
+		# Option basic-auth username and password for elasticsearch
+		$(to_yaml_kv "es_username" "${ES_USERNAME}")
+		$(to_yaml_kv "es_password" "${ES_PASSWORD}")
 
-	# The index on es_host which is used for metadata storage
-	# This can be a unmapped index, but it is recommended that you run
-	# elastalert-create-index to set a mapping
-	writeback_index: ${WRITEBACK_INDEX:-elastalert_status}
+		# GET request with body is the default option for Elasticsearch. 
+		# If it fails for some reason, you can pass 'GET', 'POST' or 'source'.
+		# See http://elasticsearch-py.readthedocs.io/en/master/connection.html?highlight=send_get_body_as#transport
+		# for details
+		$(to_yaml_kv "es_send_get_body_as" "${ES_SEND_GET_BODY_AS}")
 
-	##
-	## ELASTALERT PROCESS CONFIGURATION
-	##
+		$(to_yaml_kv "es_conn_timeout" "${ES_CONN_TIMEOUT}")
 
-	# This is the folder that contains the rule yaml files
-	# Any .yaml file will be loaded as a rule
-	rules_folder: ${ELASTALERT_RULES_FOLDER}
+		# The index on es_host which is used for metadata storage
+		# This can be a unmapped index, but it is recommended that you run
+		# elastalert-create-index to set a mapping
+		writeback_index: ${WRITEBACK_INDEX:-elastalert_status}
 
-	$(to_yaml_kv "scan_subdirectories" "${SCAN_SUBDIRECTORIES}")
+		##
+		## ELASTALERT PROCESS CONFIGURATION
+		##
 
-	# How often ElastAlert will query elasticsearch
-	# The unit can be anything from weeks to seconds
-	$(to_yaml_time "run_every" "${RUN_EVERY:-1 minutes}")
+		# This is the folder that contains the rule yaml files
+		# Any .yaml file will be loaded as a rule
+		rules_folder: ${ELASTALERT_RULES_FOLDER}
 
-	# ElastAlert will buffer results from the most recent
-	# period of time, in case some log sources are not in real time
-	$(to_yaml_time "buffer_time" "${BUFFER_TIME:-45 minutes}")
+		$(to_yaml_kv "scan_subdirectories" "${SCAN_SUBDIRECTORIES}")
 
-	# If true, ElastAlert will disable rules which throw uncaught exceptions.
-	# It will upload a traceback message to elastalert_metadata and if notify_email 
-	# is set,send an email notification.
-	# This defaults to True.
-	$(to_yaml_kv "disable_rules_on_error" "${DISABLE_RULES_ON_ERROR}")
+		# How often ElastAlert will query elasticsearch
+		# The unit can be anything from weeks to seconds
+		$(to_yaml_time "run_every" "${RUN_EVERY:-1 minutes}")
 
-	# If an alert fails for some reason, ElastAlert will retry
-	# sending the alert until this time period has elapsed
-	$(to_yaml_time "alert_time_limit" "${ALERT_TIME_LIMIT:-2 days}")
+		# ElastAlert will buffer results from the most recent
+		# period of time, in case some log sources are not in real time
+		$(to_yaml_time "buffer_time" "${BUFFER_TIME:-45 minutes}")
 
-	##
-	## Email settings
-	##
+		# If true, ElastAlert will disable rules which throw uncaught exceptions.
+		# It will upload a traceback message to elastalert_metadata and if notify_email 
+		# is set,send an email notification.
+		# This defaults to True.
+		$(to_yaml_kv "disable_rules_on_error" "${DISABLE_RULES_ON_ERROR}")
 
-	$(to_yaml_kv "notify_email" "${NOTIFY_EMAIL}")
-	$(to_yaml_kv "from_addr" "${FROM_ADDR}")
-	$(to_yaml_kv "smtp_host" "${SMTP_HOST}")
-	$(to_yaml_kv "email_reply_to" "${EMAIL_REPLY_TO}")
+		# If an alert fails for some reason, ElastAlert will retry
+		# sending the alert until this time period has elapsed
+		$(to_yaml_time "alert_time_limit" "${ALERT_TIME_LIMIT:-2 days}")
 
+		# $(to_yaml_kv "timestamp_field" "timestamp")
+		# $(to_yaml_kv "timestamp_type" "custom")
+		# $(to_yaml_kv "timestamp_format" "'%Y-%m-%d %H:%M:%S.%f'")
+		# $(to_yaml_kv "timestamp_format_expr" "'ts[:23] + ts[26:]'")
+
+		##
+		## Email settings
+		##
+
+		$(to_yaml_kv "notify_email" "${NOTIFY_EMAIL}")
+		$(to_yaml_kv "from_addr" "${FROM_ADDR}")
+		$(to_yaml_kv "smtp_host" "${SMTP_HOST}")
+		$(to_yaml_kv "email_reply_to" "${EMAIL_REPLY_TO}")
 	EOF
-else
-	printf 'INFO:entrypoint.sh:Loading configuration from mounted config file.\n'
-	## Set variables ELASTICSEARCH_HOST and ELASTICSEARCH_PORT based on config file or raise an error
-	ELASTICSEARCH_HOST=$(get_yaml_value "es_host" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
-	ELASTICSEARCH_PORT=$(get_yaml_value "es_port" "${ELASTALERT_INSTALLATION_PATH}/config.yaml")
 
-	## Eventually set USE_SSL, VERIFY_CERTS, ES_USERNAME, ES_PASSWORD
-	USE_SSL=$(get_yaml_value "use_ssl" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
-	VERIFY_CERTS=$(get_yaml_value "verify_certs" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
-	ES_USERNAME=$(get_yaml_value "es_username" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
-	ES_PASSWORD=$(get_yaml_value "es_password" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
-	WRITEBACK_INDEX=$(get_yaml_value "writeback_index" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
-fi
-
-## Error handling for
-if [[ -z "${ELASTICSEARCH_HOST}" ]] || [[ -z "${ELASTICSEARCH_PORT}" ]]; then
-	printf 'ERROR:entrypoint.sh:Not enought information to reach ES cluster. \n';
-	exit -1;
-fi
-
-## Testing for Writeback index status
-printf 'INFO:entrypoint.sh:Stalling for Elasticsearch, trying to reach %s\n' "$(elasticsearch_uri)";
-while true; do
-	if [[ $(curl -o /dev/null --silent --write-out '%{http_code}' "$(elasticsearch_uri)") = 200 ]]; then
-		printf 'INFO:entrypoint.sh:Elasticsearch cluster found.\n';
-		break;
 	else
-		printf 'WARN:entrypoint.sh:Cannot reach Elasticsearch cluster retrying in 3 seconds.\n';
-		sleep 3;
+		INFO_log 'Loading configuration from mounted config file'
+		## Set variables ELASTICSEARCH_HOST and ELASTICSEARCH_PORT based on config file or raise an error
+		ELASTICSEARCH_HOST=$(get_yaml_value "es_host" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
+		ELASTICSEARCH_PORT=$(get_yaml_value "es_port" "${ELASTALERT_INSTALLATION_PATH}/config.yaml")
+
+		## Eventually set USE_SSL, VERIFY_CERTS, ES_USERNAME, ES_PASSWORD
+		USE_SSL=$(get_yaml_value "use_ssl" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
+		VERIFY_CERTS=$(get_yaml_value "verify_certs" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
+		ES_USERNAME=$(get_yaml_value "es_username" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
+		ES_PASSWORD=$(get_yaml_value "es_password" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
+		WRITEBACK_INDEX=$(get_yaml_value "writeback_index" "${ELASTALERT_INSTALLATION_PATH}/config.yaml");
 	fi
-done
 
-printf 'INFO:entrypoint.sh:Checking existance of writeback index <%s>\n' "${WRITEBACK_INDEX:-elastalert_status}";
-
-res_http_code=$(curl -o /dev/null --silent --write-out '%{http_code}' "$(elasticsearch_uri)${WRITEBACK_INDEX:-elastalert_status}");
-
-case "${res_http_code}" in
-200) # 200 OK is returned by Elasticsearch API when the index already exists
-	printf 'INFO:entrypoint.sh:Elastalert writeback index already exists.\n'
-	;;
-404) # 404 Not found is returned by ES API when the index does not exist
-	printf 'INFO:entrypoint.sh:Elastalert writeback index does not currently exist.\n'
-	python -m elastalert.create_index \
-				 --index "${WRITEBACK_INDEX:-elastalert_status}" \
-				 --old-index "" > /dev/null \
-				 && printf 'INFO:entrypoint.sh:Writeback index %s created.\n' "${WRITEBACK_INDEX:-elastalert_status}"\
-				 || printf 'CRIT:entrypoint.sh:Cannot create Elastalert writeback index.\n'
-	;;
-401) # 401 Basic HTTP auth failure.
-	printf 'ERROR:entrypoint.sh:Authentication failure on %s:%s' "${ELASTICSEARCH_HOST}" "${ELASTICSEARCH_PORT}"; [[ -n ${ES_URL_PREFIX} ]] && printf '/%s ' "${ES_URL_PREFIX}";
-	if [[ -z ${ES_USERNAME} ]] && [[ -z ${ES_PASSWORD} ]]; then 
-		printf 'INFO:entrypoint.sh:Reason Basic authentication is required to reach Elasticsearch API\n';
-	else
-		printf 'INFO:entrypoint.sh:Reason Bad Username / Password\n';
+	## Error handling for incomplete configurations
+	if [[ -z "${ELASTICSEARCH_HOST}" ]] || [[ -z "${ELASTICSEARCH_PORT}" ]]; then
+		ERROR_log 'Not enought information to reach ES cluster';
+		exit -1;
 	fi
-	;;
-esac
 
-## Starting Elastalert process
-exec python -m elastalert.elastalert \
-		--config "${ELASTALERT_INSTALLATION_PATH}/config.yaml" \
-		$@ ## <- All other arguments (for the CMD docker directive)
+	## Testing for Writeback index status
+	INFO_log 'Stalling for Elasticsearch, trying to reach %s' "$(elasticsearch_uri)";
+
+	while true; do
+		if [[ $(http_code_from_es_api "/") = 200 ]]; then
+			INFO_log 'Elasticsearch cluster found';
+			break;
+		else
+			WARN_log 'Cannot reach Elasticsearch cluster retrying in 5 seconds';
+			sleep 5;
+		fi
+	done
+
+	INFO_log 'Checking existance of writeback index <%s>' "${WRITEBACK_INDEX:-elastalert_status}";
+
+	case $(http_code_from_es_api "${WRITEBACK_INDEX:-elastalert_status}") in
+	200) # 200 OK is returned by Elasticsearch API when the index already exists
+		INFO_log 'Elastalert writeback index already exists'
+		;;
+	404) # 404 Not found is returned by ES API when the index does not exist
+		INFO_log 'Elastalert writeback index does not currently exist'
+		python -m elastalert.create_index \
+					--index "${WRITEBACK_INDEX:-elastalert_status}" \
+					--old-index "" > /dev/null \
+					&& INFO_log 'Writeback index %s created' "${WRITEBACK_INDEX:-elastalert_status}" \
+					|| ERROR_log 'Cannot create Elastalert writeback index'
+		;;
+	401) # 401 Basic HTTP auth failure.
+		ERROR_log 'Authentication failure on %s:%s' "${ELASTICSEARCH_HOST}" "${ELASTICSEARCH_PORT}"; [[ -n ${ES_URL_PREFIX} ]] && printf '/%s ' "${ES_URL_PREFIX}";
+		if [[ -z ${ES_USERNAME} ]] && [[ -z ${ES_PASSWORD} ]]; then 
+			INFO_log 'Reason Basic authentication is required to reach Elasticsearch API';
+		else
+			INFO_log 'Reason Bad Username / Password';
+		fi
+		;;
+	esac
+
+	case $1 in
+	elastalert-test-rule)
+		## Identify if a special elastalert script is called
+		shift
+		exec python -m elastalert.test_rule \
+				--config "${ELASTALERT_INSTALLATION_PATH}/config.yaml" \
+				${@} ## <- All other arguments (from the docker CMD directive)
+		;;
+	elastalert-create-index)
+		## Identify if a special elastalert script is called
+		shift
+		exec python -m elastalert.create_index \
+				--config "${ELASTALERT_INSTALLATION_PATH}/config.yaml" \
+				${@} ## <- All other arguments (from the docker CMD directive)
+		;;
+	*)
+		## Starting Elastalert process
+		exec python -m elastalert.elastalert \
+				--config "${ELASTALERT_INSTALLATION_PATH}/config.yaml" \
+				${@} ## <- All other arguments (from the docker CMD directive)
+		;;
+	esac
+}
+
+trap clean_exit SIGINT;
+
+main ${@}
