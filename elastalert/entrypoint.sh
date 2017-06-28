@@ -183,10 +183,10 @@ main() {
 		# sending the alert until this time period has elapsed
 		$(to_yaml_time "alert_time_limit" "${ALERT_TIME_LIMIT:-2 days}")
 
-		# $(to_yaml_kv "timestamp_field" "timestamp")
-		# $(to_yaml_kv "timestamp_type" "custom")
-		# $(to_yaml_kv "timestamp_format" "'%Y-%m-%d %H:%M:%S.%f'")
-		# $(to_yaml_kv "timestamp_format_expr" "'ts[:23] + ts[26:]'")
+		$(to_yaml_kv "timestamp_field" "'${TIMESTAMP_FIELD:-@timestamp}'")
+		$(to_yaml_kv "timestamp_type" "${TIMESTAMP_TYPE:-iso}")
+		$(to_yaml_kv "timestamp_format" "'${TIMESTAMP_FORMAT}'")
+		$(to_yaml_kv "timestamp_format_expr" "${TIMESTAMP_FORMAT_EXPR}")
 
 		##
 		## Email settings
