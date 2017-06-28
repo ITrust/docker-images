@@ -20,7 +20,7 @@ COPY ./entrypoint.sh .
 RUN chmod u+x ./entrypoint.sh && \
     chown "${elastalert_systemuser}":"${elastalert_systemuser}" ./entrypoint.sh
 
-USER ${elastalert_systemuser}
+#USER ${elastalert_systemuser}
 
 RUN curl -L "https://github.com/Yelp/elastalert/archive/${elastalert_release}.tar.gz" | tar -xz -C "${elastert_installation_path}" --strip-components=1 && \
     pip install --user "elasticsearch<3.0.0" && \
