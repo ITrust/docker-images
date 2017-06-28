@@ -46,6 +46,12 @@ all the environment variables described below are the capitalized version the YA
   - `SMTP_HOST` Analoguous of their uncapitalized yaml parametter.
   - `EMAIL_REPLY_TO` Analoguous of their uncapitalized yaml parametter.
 
+- Timestamp configuration:
+  - `TIMESTAMP_FIELD` Analoguous of their uncapitalized yaml parametter. (default value to `@timestamp`)
+  - `TIMESTAMP_TYPE` Analoguous of their uncapitalized yaml parametter. (default value to `iso`)
+  - `TIMESTAMP_FORMAT` Analoguous of their uncapitalized yaml parametter. (Optionnal)
+  - `TIMESTAMP_FORMAT_EXPR` Analoguous of their uncapitalized yaml parametter. (Optionnal)
+
 ### Litteral time descriptions
 
 Some values expect a so-called "litteral time description", this description acts as a string translated into a yaml object expected from elastalert.
