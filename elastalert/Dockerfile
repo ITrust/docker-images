@@ -3,7 +3,7 @@ FROM python:2.7
 ARG elastalert_release="v0.1.25"
 ARG elastalert_rules_folder="/opt/rules"
 ARG elastert_installation_path="/opt/elastalert"
-ARG elasticsearch_version="<3.0.0"
+ARG elasticsearch_version=">=5.0.0"
 
 ENV ELASTALERT_INSTALLATION_PATH="${elastert_installation_path}" \
     ELASTALERT_RULES_FOLDER="${elastalert_rules_folder}"
