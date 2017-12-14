@@ -1,6 +1,6 @@
 FROM python:2.7
 
-ARG elastalert_release="v0.1.20"
+ARG elastalert_release="v0.1.25"
 ARG elastalert_rules_folder="/opt/rules"
 ARG elastert_installation_path="/opt/elastalert"
 ARG elasticsearch_version="<3.0.0"
