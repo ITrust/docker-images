@@ -1,9 +1,5 @@
-from logstash:2
-VOLUME ["/config-dir"]
-RUN apt-get update && apt-get install -y libzmq3-dev && \
-    rm -rf /var/lib/apt/lists/* && rm -rf /tmp/*
-RUN /opt/logstash/bin/logstash-plugin install logstash-filter-translate
-RUN /opt/logstash/bin/logstash-plugin install logstash-input-beats
-RUN /opt/logstash/bin/logstash-plugin install logstash-codec-cef
-RUN /opt/logstash/bin/logstash-plugin install logstash-filter-cidr
+FROM docker.elastic.co/logstash/logstash-oss:6.1.1
 
+RUN bin/logstash-plugin install logstash-output-gelf \
+ && bin/logstash-plugin install logstash-output-syslog \
+ && bin/logstash-plugin install logstash-filter-alter 
