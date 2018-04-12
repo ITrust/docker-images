@@ -1,4 +1,4 @@
-FROM docker.elastic.co/logstash/logstash-oss:6.1.1
+FROM docker.elastic.co/logstash/logstash-oss:6.2.3
 
 RUN bin/logstash-plugin install logstash-output-gelf \
  && bin/logstash-plugin install logstash-output-syslog \
