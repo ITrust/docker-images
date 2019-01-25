@@ -1,8 +1,8 @@
-FROM debian:jessie
+FROM debian:stretch
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get install -yq --no-install-recommends \
+RUN apt-get update && apt-get install -yq \
         rsyslog \
         rsyslog-gnutls \
         rsyslog-mysql \
@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
         rsyslog-mongodb \
         rsyslog-relp \
     && \
-    echo "deb http://ftp.debian.org/debian jessie-backports main" >> /etc/apt/sources.list.d/jessie-backports.list && \ 
-    apt-get update && apt-get -t jessie-backports install -yq --no-install-recommends \
+    echo "deb http://ftp.debian.org/debian stretch-backports main" >> /etc/apt/sources.list.d/stretch-backports.list && \ 
+    apt-get update && apt-get -t stretch-backports install -yq \
         rsyslog-kafka \
         rsyslog-hiredis \
     && \
